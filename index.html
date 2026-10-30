@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ceb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karne Admin</title>
+<meta name="theme-color" content="#2f5a26">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bh:0px;--bg:#e4f1db;--card:#fbfef8;--ink:#1f2e1b;--mute:#587050;--line:#c9e0bc;--g:#3f8a3a;--gd:#2b6a2b;--gl:#dff0d3;--amb:#a8742a;--err:#b3382a;--r:16px}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 260px at 50% 0,#cfe8bf 0,transparent 70%),var(--bg);color:var(--ink);font:15px/1.5 "Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:calc(var(--bh) + 96px)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:10px 16px;font-weight:700;background:var(--g);color:#fff}
+button:hover{background:var(--gd)}button:disabled{opacity:.6;cursor:wait}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}button.ghost:hover{background:var(--gl)}
+:focus-visible{outline:3px solid #8fb36a;outline-offset:2px}
+.hide{display:none!important}
+/* header */
+.top{position:sticky;top:0;z-index:5;background:radial-gradient(120px 60px at 92% 0,rgba(214,232,160,.35),transparent 70%),linear-gradient(135deg,#2b6a2b,#3f8a3a 55%,#69b052);color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;box-shadow:0 2px 12px rgba(43,74,34,.35)}
+.top-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:24px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25)}
+.top h1{margin:0;font-size:19px;line-height:1.2;font-weight:800}
+.top small{display:flex;align-items:center;gap:6px;font-size:12.5px;opacity:.9}
+.dot{width:8px;height:8px;border-radius:50%;background:#7CFC9A}.dot.bad{background:#ffb4ab}
+.top .sp{flex:1}
+.iconb{background:rgba(255,255,255,.16);width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:12px}
+.iconb:hover{background:rgba(255,255,255,.28)}
+.iconb.spin svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+main{max-width:760px;margin:0 auto;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:14px;padding:10px 6px;text-align:center;border:1px solid var(--line)}
+.stat b{display:block;font-size:17px;line-height:1.2}.stat span{font-size:11.5px;color:var(--mute)}
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);padding:16px;margin-bottom:16px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.card-h h2{margin:0;font-size:17px;font-weight:800}
+.tools{display:flex;gap:8px;margin-bottom:6px}.tools select{flex:1;min-width:0}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+textarea{resize:vertical}input[type=color]{height:44px;padding:3px}
+label{display:block;font-weight:700;font-size:13px;margin:12px 0 4px}
+.hint{font-size:13px;color:var(--mute);margin:4px 0 0}
+.empty{color:var(--mute);margin:8px 0}
+/* orders */
+.ord{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);position:relative}
+.ord:last-of-type{border-bottom:0}
+.ord .main{min-width:0}.ord b{overflow-wrap:anywhere}
+.meta{display:block;font-size:13px;color:var(--mute);line-height:1.35}
+.chips{display:flex;gap:6px;margin-top:6px}
+.fl{padding:2px 10px;font-size:11.5px;font-weight:700;border-radius:99px;color:#fff;line-height:1.4}.fl.d{background:var(--g)}.fl.p{background:var(--amb)}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}
+.kg{font-weight:800;white-space:nowrap}
+.acts{display:flex;gap:2px}
+.sb{background:transparent;color:var(--ink);padding:5px;border-radius:8px;display:grid;place-items:center}.sb:hover{background:var(--gl)}
+.kmenu{position:absolute;right:0;top:calc(100% - 8px);z-index:4;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden}
+.kmenu button{display:block;width:100%;text-align:left;background:#fff;color:var(--ink);border-radius:0;padding:11px 14px;border-bottom:1px solid var(--line)}
+.kmenu button:last-child{border:0;color:var(--err)}.kmenu button:hover{background:var(--gl)}
+.kchk{display:flex;align-items:center;gap:10px;margin:0;padding:11px 14px;background:#fff;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;cursor:pointer}.kchk:hover{background:var(--gl)}.kchk input{width:20px;height:20px;padding:0;flex:0 0 auto;accent-color:var(--g)}
+.sum{display:flex;justify-content:space-between;margin-top:8px;padding-top:12px;border-top:2px solid var(--ink);font-weight:800}
+.sub{font-size:14px;font-weight:800;margin:16px 0 2px}
+.prow{display:flex;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}.prow span:first-child{flex:1}
+/* map */
+#adminMap{height:340px;border-radius:12px;border:1px solid var(--line);z-index:0}
+.mapcard.full{position:fixed;inset:0;z-index:30;margin:0;border-radius:0;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 12px 12px}
+.mapcard.full #adminMap{flex:1;height:auto}
+.leaflet-tooltip.pintip{background:#fff;border:1.5px solid var(--ink);border-radius:6px;font:700 12px/1.2 "Nunito",sans-serif;padding:2px 6px;box-shadow:none}
+.pinicon{background:none;border:0}.pop b{display:block}.pop a{font-weight:700;color:var(--gd)}
+/* banner */
+.banner{position:fixed;left:0;right:0;bottom:0;height:30px;z-index:7;display:flex;align-items:center;overflow:hidden;background:var(--bn-bg,#ffd54a);color:var(--bn-fg,#1d2a21);font-size:13px;font-weight:700;border-top:2px solid rgba(0,0,0,.2)}
+.bn-label{flex:0 0 auto;height:100%;display:flex;align-items:center;padding:0 10px;background:rgba(0,0,0,.28);color:#fff;font-size:12px;white-space:nowrap;z-index:1}
+.bn-view{flex:1;min-width:0;height:100%;overflow:hidden;position:relative}
+.bn-track{position:absolute;left:0;top:0;height:100%;width:max-content;display:flex;align-items:center;white-space:nowrap;animation:bn var(--dur,20s) linear infinite}
+.bn-grp{display:flex;flex:0 0 auto}.bn-grp span::after{content:"\2022";margin:0 22px;opacity:.6}
+.banner:hover .bn-track,.banner:active .bn-track{animation-play-state:paused}
+@keyframes bn{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.bn-track,.iconb.spin svg{animation:none}}
+/* settings fab + sheet */
+.fab{position:fixed;right:18px;bottom:calc(18px + var(--bh) + env(safe-area-inset-bottom,0px));z-index:8;width:56px;height:56px;padding:0;border-radius:50%;display:grid;place-items:center;box-shadow:0 6px 18px rgba(43,74,34,.45)}
+.scrim{position:fixed;inset:0;background:rgba(31,44,24,.5);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:760px;margin:0 auto;max-height:90vh;max-height:90dvh;background:var(--bg);border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.sh-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sh-h h2{margin:0;font-size:18px;font-weight:800}
+.sh-b{overflow:auto;padding:12px 16px 20px}
+.sh-f{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--card)}
+.sh-f button{width:100%}
+details.acc{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+details.acc>summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:800;display:flex;justify-content:space-between}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:"▾";transition:transform .2s}details.acc[open]>summary::after{transform:rotate(180deg)}
+.accbody{padding:0 14px 14px}
+.row2{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.sw{display:flex;align-items:center;gap:10px;font-weight:700;margin:12px 0 0;cursor:pointer}.sw input{width:22px;height:22px;accent-color:var(--g)}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.presets button{padding:5px 12px;font-size:13px}
+.msg{min-height:1.2em;margin:8px 0 0;font-size:14px;font-weight:700}.msg.ok{color:var(--g)}.msg.err{color:var(--err)}
+.full-b{width:100%;margin-top:10px}
+/* modals */
+.modal{position:fixed;inset:0;background:rgba(31,44,24,.6);display:none;align-items:center;justify-content:center;padding:14px;z-index:40}
+.modal.on{display:flex}
+.box{width:100%;max-width:400px;max-height:100%;overflow:auto;background:var(--card);border-radius:var(--r);padding:16px}
+.box h2{margin:0 0 4px;font-size:18px}
+.mapbox{max-width:560px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.maphead{display:flex;justify-content:space-between;align-items:center;background:var(--g);color:#fff;padding:8px 8px 8px 14px;font-weight:800}
+.maphead button{background:transparent;padding:4px 10px;font-size:18px}
+#pickMap{height:min(56vh,430px)}
+.mapmsg{margin:0;padding:8px 14px 0;font-size:13px;color:var(--mute);min-height:2.6em}
+.maprow{display:flex;gap:8px;padding:8px 12px 12px}.maprow button{flex:1;padding:9px 6px;font-size:14px}
+.rowb{display:flex;gap:8px;margin-top:12px}.rowb>*{flex:1}
+
+/* v3: light-green to green, distinct cards + customers, compact list */
+.stats .stat{border:0}
+.stat:nth-child(1){background:#eaf6e1}.stat:nth-child(2){background:#cfe8bf}.stat:nth-child(3){background:#a9d58f}
+.stat:nth-child(4){background:#3f8a3a;color:#fff}.stat:nth-child(4) span{color:#e1f3d8}
+.card{border-top:5px solid var(--g);box-shadow:0 2px 10px rgba(43,106,43,.1)}
+.card-h h2{color:var(--gd)}
+.mapcard{background:#eef8e8;border-top-color:#7cc263}
+.ord{align-items:center;gap:8px;padding:6px 8px 6px 10px;margin-bottom:6px;border:0;border-left:5px solid #a9d58f;border-radius:10px;background:#f1f9ec}
+.ord:nth-child(even){background:#e3f2d8}
+.ord.dn{border-left-color:#2f7a3a}
+.ord .main{flex:1}
+.l1{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.l1 b{font-size:14.5px;line-height:1.25}
+.fl{padding:1px 8px;font-size:10.5px}
+.meta{font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side{flex-direction:row;align-items:center;gap:2px}
+.kg{font-size:14px;margin-right:2px}
+.sb{padding:4px}
+.kmenu{top:calc(100% - 4px);right:6px;z-index:6}
+.sum{margin-top:10px;padding:8px 12px;border-top:0;border-radius:10px;background:var(--g);color:#fff}
+.sub{margin:12px 0 4px;color:var(--gd)}
+.prow{padding:4px 8px;border-bottom:0;border-radius:8px;font-size:14px}.prow:nth-of-type(odd){background:#eef8e8}
+details.acc[open]>summary{background:var(--gl)}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in">
+  <div class="logo" aria-hidden="true">🐖</div>
+  <div><h1>Karne Admin</h1><small><i class="dot" id="dot"></i><span id="status">Gi-konek…</span></small></div>
+  <span class="sp"></span>
+  <button class="iconb" id="refresh" aria-label="I-refresh"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+</div></header>
+
+<main>
+  <div class="stats">
+    <div class="stat"><b id="sOrd">0</b><span>Order</span></div>
+    <div class="stat"><b id="sKg">0</b><span>Kilo</span></div>
+    <div class="stat"><b id="sAmt">P0</b><span>Kantidad</span></div>
+    <div class="stat"><b id="sDone">0</b><span>Na-deliver</span></div>
+  </div>
+
+  <section class="card">
+    <div class="card-h"><h2>Mga nag-order</h2></div>
+    <div class="tools">
+      <select id="printFilter" aria-label="Pilia kung unsa i-print">
+        <option value="all">I-print: Tanan</option><option value="pending">I-print: Wala pa na-deliver</option>
+        <option value="done">I-print: Na-deliver na</option><option value="unpaid">I-print: Wala pa bayad</option><option value="paid">I-print: Bayad na</option>
+      </select>
+      <button class="ghost" id="printBtn">Print</button>
+    </div>
+    <div id="rows"></div>
+  </section>
+
+  <section class="card mapcard" id="mapCard">
+    <div class="card-h"><h2>Mapa sa mga customer</h2>
+      <button class="ghost" id="fsBtn" style="padding:7px 12px" aria-label="Full screen"><span id="fsTxt">⛶ Full screen</span></button></div>
+    <div id="adminMap"></div>
+    <p class="hint" id="mapInfo"></p>
+  </section>
+</main>
+
+<div class="banner hide" id="banner" role="region" aria-label="Banner sa ubos">
+  <span class="bn-label hide" id="bnLabel"></span>
+  <div class="bn-view" id="bnView"><div class="bn-track" id="bnTrack"></div></div>
+</div>
+
+<button class="fab" id="fab" aria-label="Setting"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+
+<div class="scrim hide" id="scrim"></div>
+<aside class="sheet hide" id="sheet" role="dialog" aria-label="Setting">
+  <div class="sh-h"><h2>Setting</h2><button class="ghost" id="sheetX" style="padding:6px 12px">Close</button></div>
+  <div class="sh-b">
+    <details class="acc" open><summary>Mga parte sa baboy ug presyo</summary><div class="accbody">
+      <label for="priceIn">Presyo kada kilo (P)</label>
+      <input id="priceIn" type="number" inputmode="decimal" min="1" step="any">
+      <label for="partsIn">Mga parte (usa kada linya)</label>
+      <textarea id="partsIn" rows="6"></textarea>
+      <p class="hint">Pananglitan: <b>Pata 230</b>. Ang numero sa katapusan mao ang presyo kada kilo sa maong parte. Kung walay numero, gamiton ang presyo kada kilo sa ibabaw.</p>
+    </div></details>
+    <details class="acc"><summary>Banner sa ubos (update)</summary><div class="accbody" id="bnBox">
+      <label class="sw"><input type="checkbox" id="bnOn"> Ipakita ang banner sa ubos</label>
+      <label for="bnText">Mga update</label>
+      <textarea id="bnText" rows="3" maxlength="400" placeholder="Pananglitan: Pwede na mag-pickup sa 4PM. Gcash o cash ra."></textarea>
+      <p class="hint">Usa ka balita kada linya. Makita dayon sa ubos samtang nag-type ka.</p>
+      <div class="row2"><div><label for="bnLabelIn">Label</label><input id="bnLabelIn" maxlength="14" placeholder="BALITA" autocomplete="off"></div>
+      <div><label for="bnSpeed">Katulin</label><select id="bnSpeed"><option value="slow">Hinay</option><option value="normal">Normal</option><option value="fast">Paspas</option></select></div></div>
+      <div class="row2"><div><label for="bnBg">Kolor sa background</label><input id="bnBg" type="color" value="#f2d680"></div>
+      <div><label for="bnFg">Kolor sa letra</label><input id="bnFg" type="color" value="#26321f"></div></div>
+      <div class="presets" id="bnPresets">
+        <button type="button" class="ghost" data-bg="#f2d680" data-fg="#26321f">Dilaw</button><button type="button" class="ghost" data-bg="#b3261e" data-fg="#ffffff">Pula</button>
+        <button type="button" class="ghost" data-bg="#3f8a3a" data-fg="#ffffff">Lunhaw</button><button type="button" class="ghost" data-bg="#5a4630" data-fg="#ffffff">Lupa</button>
+      </div>
+    </div></details>
+    <details class="acc"><summary>Uban pang setting</summary><div class="accbody">
+      <label class="sw"><input type="checkbox" id="showList"> Ipakita ang lista sa mga nag-order sa main page</label>
+      <label class="sw"><input type="checkbox" id="chatOn"> Ipakita ang group chat sa main page</label>
+      <button type="button" class="ghost full-b" id="clearChat">I-clear ang chat</button>
+    </div></details>
+    <details class="acc"><summary>Contact sa tag-iya</summary><div class="accbody">
+      <label for="owName">Ngalan sa tag-iya</label><input id="owName" maxlength="60" autocomplete="off">
+      <label for="owInfo">Info sa tag-iya</label><textarea id="owInfo" rows="4" maxlength="500" placeholder="Pananglitan: Negosyo, oras sa pickup, paagi sa bayad…"></textarea>
+      <label for="owPhone">Mobile number</label><input id="owPhone" type="tel" inputmode="tel" maxlength="20" placeholder="09XX XXX XXXX" autocomplete="off">
+      <label for="owLoc">Ngalan sa location (optional)</label><input id="owLoc" maxlength="80" placeholder="Pananglitan: Brgy. ___, Lagonglong" autocomplete="off">
+      <button type="button" class="ghost full-b" id="owPin"></button>
+      <p class="hint" id="owPinInfo"></p>
+    </div></details>
+    <p class="msg" id="setMsg" role="status"></p>
+  </div>
+  <div class="sh-f"><button id="saveSet">Save changes</button></div>
+</aside>
+
+<div class="modal" id="editModal"><div class="box">
+  <h2>I-edit ang order</h2>
+  <label for="eKilo">Kilo</label><input id="eKilo" inputmode="decimal" maxlength="6" autocomplete="off">
+  <label for="ePart">Parte sa baboy</label><select id="ePart"></select>
+  <label for="eName">Ngalan</label><input id="eName" maxlength="60">
+  <label for="eNote">Address/Notes</label><input id="eNote" maxlength="80" autocomplete="off">
+  <button type="button" class="ghost full-b" id="ePin"></button>
+  <p class="hint" id="ePinInfo"></p><p class="msg" id="eMsg" role="status"></p>
+  <div class="rowb"><button class="ghost" id="eCancel">Cancel</button><button id="eSave">Save</button></div>
+</div></div>
+
+<div class="modal" id="mapModal" role="dialog" aria-label="Mapa"><div class="box mapbox">
+  <div class="maphead"><span id="mapTitle">I-pin ang location</span><button id="mapX" aria-label="Isira">✕</button></div>
+  <div id="pickMap"></div><p class="mapmsg" id="mapMsg"></p>
+  <div class="maprow"><button class="ghost" id="mapGps">Akong location</button><button class="ghost" id="mapClear">Tangtang</button><button id="mapSave">Save pin</button></div>
+</div></div>
+
+<div id="printArea" hidden></div>
+<style>@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;color:#000;font:12px/1.4 Arial,sans-serif}#printArea table{width:100%;border-collapse:collapse}#printArea th,#printArea td{border:1px solid #444;padding:3px 6px;text-align:left}#printArea th{background:#eee}#printArea .num{text-align:right}#printArea h1{font-size:18px;margin:0}#printArea h2{font-size:14px;margin:14px 0 4px}}</style>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const BIN='6ae27c3bac6210605a5a8090', KEY='$2a$10$QRwVf3OgkrsAGNkRCgouRebBADnAcFGs/l8ZzN8YICcI7/NCaf3Ia', API='https://api.jsonbin.io/v3/b/'+BIN;
+const DEFAULT_PRICE=280, DEFAULT_PARTS=['Liempo','Kasim','Pigue','Tadyang','Pata','Bisan unsa'], DEFAULT_SIGN='...';
+const DEFAULT_BANNER={on:false,text:'',label:'Update:',speed:'normal',bg:'#f2d680',fg:'#26321f'};
+const BN_SPEED={slow:30,normal:55,fast:95}, MAP_HOME=[8.8167,124.7667];
+let data={settings:{},orders:[],chat:[]}, writing=0, menuId=null, authHeader='X-Access-Key';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const peso=n=>'P'+Number(n).toLocaleString('en-PH',{maximumFractionDigits:2});
+const kg=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+const price=()=>Number(data.settings.price)>0?Number(data.settings.price):DEFAULT_PRICE;
+function parsePart(line){const m=String(line||'').trim().match(/^(.*?)[\s:=\-]*(?:P|\u20b1)?\s*(\d+(?:[.,]\d+)?)\s*(?:\/\s*kg|pesos)?\s*$/i);
+  if(m&&m[1].trim()){const p=parseFloat(m[2].replace(',','.'));if(p>0)return{name:m[1].trim(),price:p};}
+  return{name:String(line||'').trim(),price:0};}
+const partNames=()=>data.settings.parts.map(l=>parsePart(l).name);
+function partPrice(name){const k=String(name||'').trim().toLowerCase();const h=data.settings.parts.map(parsePart).find(p=>p.name.toLowerCase()===k);return h&&h.price>0?h.price:price();}
+const hasPin=o=>!!o&&typeof o.lat==='number'&&typeof o.lng==='number'&&isFinite(o.lat)&&isFinite(o.lng);
+const okHex=(c,d)=>/^#[0-9a-f]{6}$/i.test(c||'')?c:d;
+const ownerCfg=()=>Object.assign({name:'',info:'',phone:'',locLabel:'',lat:null,lng:null},data.settings.owner&&typeof data.settings.owner==='object'?data.settings.owner:{});
+const bannerCfg=()=>Object.assign({},DEFAULT_BANNER,data.settings.banner);
+const gmapsDir=(la,ln)=>'https://www.google.com/maps/dir/?api=1&destination='+la+','+ln;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}}, lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const PIN_SVG='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+const KEBAB='<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
+
+/* ---------- cloud (jsonbin.io) ---------- */
+function normalize(j){j=j&&typeof j==='object'?j:{};
+  data={settings:Object.assign({imageUrl:'',imageUrls:['','','','',''],showList:true,signText:DEFAULT_SIGN,price:DEFAULT_PRICE,parts:DEFAULT_PARTS.slice(),chatOn:true},j.settings),orders:Array.isArray(j.orders)?j.orders:[],chat:Array.isArray(j.chat)?j.chat:[]};
+  if(!Array.isArray(data.settings.parts)||!data.settings.parts.length)data.settings.parts=DEFAULT_PARTS.slice();
+  data.settings.banner=Object.assign({},DEFAULT_BANNER,j.settings&&typeof j.settings.banner==='object'?j.settings.banner:{});}
+async function call(method,path,body){
+  const names=authHeader==='X-Access-Key'?['X-Access-Key','X-Master-Key']:['X-Master-Key','X-Access-Key'];let err=new Error('Unknown error');
+  for(const n of names){const h={};h[n]=KEY;if(method==='GET')h['X-Bin-Meta']='false';else h['Content-Type']='application/json';
+    let r;try{r=await fetch(API+path,{method,headers:h,body});}catch(e){throw new Error('Dili maabot ang jsonbin.io. Check ang internet.');}
+    if(r.ok){authHeader=n;return r.json();}
+    let m='';try{m=(await r.json()).message||''}catch(e){}
+    err=new Error('jsonbin error '+r.status+(m?': '+m:''));if(r.status!==401&&r.status!==403)throw err;}
+  throw err;}
+const load=async()=>normalize(await call('GET','/latest'));
+const save=()=>call('PUT','',JSON.stringify(data));
+async function mutate(fn){writing++;try{await load();fn();await save();}finally{writing--;}}
+function setStatus(ok,t){$('dot').classList.toggle('bad',!ok);$('status').textContent=t;}
+async function refresh(){const b=$('refresh');b.classList.add('spin');
+  try{await load();setStatus(true,'Naka-konek · '+new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}));}
+  catch(e){setStatus(false,'Offline: '+e.message);}
+  b.classList.remove('spin');renderAll();}
+
+/* ---------- orders ---------- */
+function renderAll(){renderStats();renderOrders();renderMap();renderBanner();}
+function renderStats(){const o=data.orders;
+  $('sOrd').textContent=o.length;$('sKg').textContent=kg(o.reduce((a,x)=>a+Number(x.kilo||0),0));
+  $('sAmt').textContent=peso(o.reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0));$('sDone').textContent=o.filter(x=>x.delivered).length+'/'+o.length;}
+function renderOrders(){
+  const rows=data.orders;let html='';
+  if(!rows.length){$('rows').innerHTML='<p class="empty">Wala pay nag-order.</p>';return;}
+  html=rows.map(o=>{const id=esc(o.id);
+    return '<div class="ord '+(o.delivered?'dn':'pn')+'"><div class="main"><div class="l1"><b>'+esc(o.name)+'</b>'+(o.delivered?'<span class="fl d">Delivered</span>':'')+(o.paid?'<span class="fl p">Paid</span>':'')+'</div><span class="meta">'+esc(o.part||'')+' · '+peso(o.kilo*partPrice(o.part))+(o.note?' · '+esc(o.note):'')+'</span></div>'+
+    '<div class="side"><span class="kg">'+kg(o.kilo)+' kg</span><div class="acts">'+(hasPin(o)?'<button class="sb" data-loc="'+id+'" aria-label="Tan-awa sa mapa">'+PIN_SVG+'</button>':'')+
+    '<button class="sb" data-menu="'+id+'" aria-label="Mga opsyon">'+KEBAB+'</button></div></div>'+
+    (o.id===menuId?'<div class="kmenu"><label class="kchk"><input type="checkbox" data-id="'+id+'" data-f="delivered"'+(o.delivered?' checked':'')+'>Delivered</label><label class="kchk"><input type="checkbox" data-id="'+id+'" data-f="paid"'+(o.paid?' checked':'')+'>Paid</label><button data-edit="'+id+'">Edit</button><button data-del="'+id+'">Delete</button></div>':'')+'</div>';}).join('');
+  const tot=rows.reduce((a,o)=>a+Number(o.kilo||0),0),amt=rows.reduce((a,o)=>a+Number(o.kilo||0)*partPrice(o.part),0),m={},am={};
+  rows.forEach(o=>{const k=o.part||'Walay parte';m[k]=(m[k]||0)+Number(o.kilo||0);am[k]=(am[k]||0)+Number(o.kilo||0)*partPrice(o.part);});
+  html+='<div class="sum"><span>Total: '+kg(tot)+' kg</span><span>'+peso(amt)+'</span></div><h3 class="sub">Kilo kada parte</h3>'+
+    Object.keys(m).map(k=>'<div class="prow"><span>'+esc(k)+'</span><b>'+kg(m[k])+' kg</b><b>'+peso(am[k])+'</b></div>').join('');
+  $('rows').innerHTML=html;}
+$('rows').addEventListener('click',async e=>{
+  const mn=e.target.closest('[data-menu]'),ed=e.target.closest('[data-edit]'),dl=e.target.closest('[data-del]'),lc=e.target.closest('[data-loc]');
+  if(mn){e.stopPropagation();menuId=menuId===mn.dataset.menu?null:mn.dataset.menu;renderOrders();}
+  else if(ed){menuId=null;renderOrders();openEdit(ed.dataset.edit);}
+  else if(dl){const id=dl.dataset.del,o=data.orders.find(x=>x.id===id);menuId=null;renderOrders();
+    if(!o||!confirm('I-delete ang order ni '+o.name+'?'))return;
+    try{await mutate(()=>{data.orders=data.orders.filter(x=>x.id!==id);});}catch(err){alert('Wala na-save. '+err.message);}renderAll();}
+  else if(lc){const o=data.orders.find(x=>x.id===lc.dataset.loc);if(!hasPin(o)||!adminMap)return;
+    $('mapCard').scrollIntoView({behavior:'smooth',block:'center'});adminMap.setView([o.lat,o.lng],18);if(adminMarkers[o.id])adminMarkers[o.id].openPopup();}});
+$('rows').addEventListener('change',async e=>{
+  const id=e.target.dataset.id,f=e.target.dataset.f;if(!id||(f!=='delivered'&&f!=='paid'))return;const v=e.target.checked;
+  try{await mutate(()=>{const o=data.orders.find(x=>x.id===id);if(o)o[f]=v;});}catch(err){e.target.checked=!v;alert('Wala na-save. '+err.message);}renderAll();});
+document.addEventListener('click',e=>{if(menuId&&!e.target.closest('.kmenu')){menuId=null;document.querySelectorAll('.kmenu').forEach(m=>m.remove());}});
+
+/* ---------- print ---------- */
+$('printBtn').onclick=()=>{
+  const f=$('printFilter').value,rows=data.orders.filter(o=>f==='all'||(f==='done'?o.delivered:f==='pending'?!o.delivered:f==='paid'?o.paid:!o.paid));
+  if(!rows.length){alert('Walay order nga i-print sa gipili nga lista.');return;}
+  const label={all:'Tanan nga order',pending:'Wala pa na-deliver',done:'Na-deliver na',unpaid:'Wala pa bayad',paid:'Bayad na'}[f];
+  const title=(data.settings.signText||DEFAULT_SIGN).replace(/\{price\}/g,price()),today=new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
+  let tk=0,ta=0;const parts={};
+  const body=rows.map((o,i)=>{const k=Number(o.kilo||0),pp=partPrice(o.part),a=k*pp;tk+=k;ta+=a;const g=parts[o.part||'Walay parte']||(parts[o.part||'Walay parte']={k:0,a:0});g.k+=k;g.a+=a;
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(o.name)+'</td><td>'+esc(o.part||'')+'</td><td class="num">'+kg(k)+'</td><td class="num">'+peso(pp)+'</td><td class="num">'+peso(a)+'</td><td>'+esc(o.note||'')+'</td><td>'+(o.delivered?'Na-deliver':'&#9744;')+'</td><td>'+(o.paid?'Bayad na':'&#9744;')+'</td></tr>';}).join('');
+  const sum=Object.keys(parts).map(k=>'<tr><td>'+esc(k)+'</td><td class="num">'+kg(parts[k].k)+' kg</td><td class="num">'+peso(parts[k].a)+'</td></tr>').join('');
+  $('printArea').hidden=false;
+  $('printArea').innerHTML='<h1>'+esc(title)+'</h1><p>'+esc(label)+' &middot; '+esc(today)+' &middot; '+rows.length+' ka order</p><table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th><th>Bayad</th></tr></thead><tbody>'+body+'</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">'+kg(tk)+'</td><td></td><td class="num">'+peso(ta)+'</td><td colspan="3"></td></tr></tfoot></table><h2>Kilo kada parte</h2><table><thead><tr><th>Parte</th><th class="num">Kilo</th><th class="num">Kantidad</th></tr></thead><tbody>'+sum+'</tbody></table>';
+  setTimeout(()=>window.print(),60);};
+window.addEventListener('afterprint',()=>{$('printArea').innerHTML='';$('printArea').hidden=true;});
+
+/* ---------- maps ---------- */
+const TILES='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const EARTH='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',EARTH_L='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+const hasLeaflet=()=>typeof L!=='undefined', round6=n=>Math.round(n*1e6)/1e6;
+function pinIcon(c){return L.divIcon({className:'pinicon',html:'<svg width="30" height="40" viewBox="0 0 30 40"><path d="M15 39C15 39 2 24 2 14a13 13 0 0 1 26 0c0 10-13 25-13 25z" fill="'+c+'" stroke="#26321f" stroke-width="2"/><circle cx="15" cy="14" r="5" fill="#fff"/></svg>',iconSize:[30,40],iconAnchor:[15,39],tooltipAnchor:[0,-34],popupAnchor:[0,-34]});}
+function addBases(map){
+  const street=L.tileLayer(TILES,{maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap &copy; CARTO'});
+  const earth=L.layerGroup([L.tileLayer(EARTH,{maxZoom:19,maxNativeZoom:18,attribution:'Imagery &copy; Esri'}),L.tileLayer(EARTH_L,{maxZoom:19,maxNativeZoom:18})]);
+  (lsGet('karne_map_base')==='street'?street:earth).addTo(map);
+  L.control.layers({'Mapa':street,'Earth view':earth},null,{position:'topright'}).addTo(map);
+  map.on('baselayerchange',e=>lsSet('karne_map_base',e.name==='Earth view'?'earth':'street'));}
+let adminMap=null,adminLayer=null,adminGeo='',adminFull='',adminMarkers={};
+function renderMap(){
+  const info=$('mapInfo');
+  if(!hasLeaflet()){$('adminMap').classList.add('hide');info.textContent='Wala ma-load ang mapa. Check ang internet ug i-refresh.';return;}
+  if(!adminMap){adminMap=L.map('adminMap').setView(MAP_HOME,13);addBases(adminMap);adminLayer=L.layerGroup().addTo(adminMap);}
+  adminMap.invalidateSize();
+  const list=data.orders.filter(hasPin);
+  info.textContent=list.length?list.length+' ka customer ang naka-pin. I-tap ang pin para sa detalye ug direksyon.':'Wala pay customer nga nag-pin.';
+  const full=JSON.stringify(list.map(o=>[o.id,o.lat,o.lng,o.name,o.part,o.kilo,o.note,!!o.delivered,!!o.paid]));
+  if(full===adminFull)return;adminFull=full;adminLayer.clearLayers();adminMarkers={};
+  list.forEach(o=>{const m=L.marker([o.lat,o.lng],{icon:pinIcon(o.delivered?'#7d8a6c':'#c0452f')});
+    m.bindTooltip(esc(o.name),{permanent:true,direction:'top',className:'pintip'});
+    m.bindPopup('<div class="pop"><b>'+esc(o.name)+'</b>'+esc(o.part||'')+' · '+kg(o.kilo)+' kg'+(o.note?'<br>'+esc(o.note):'')+(o.delivered?'<br>Na-deliver na':'')+(o.paid?'<br>Bayad na':'')+'<br><a href="'+gmapsDir(o.lat,o.lng)+'" target="_blank" rel="noopener">Direksyon sa Google Maps</a></div>');
+    m.addTo(adminLayer);adminMarkers[o.id]=m;});
+  const geo=JSON.stringify(list.map(o=>[o.id,o.lat,o.lng]));if(geo===adminGeo)return;adminGeo=geo;
+  if(!list.length)adminMap.setView(MAP_HOME,13);else if(list.length===1)adminMap.setView([list[0].lat,list[0].lng],16);
+  else adminMap.fitBounds(L.latLngBounds(list.map(o=>[o.lat,o.lng])),{padding:[40,40],maxZoom:17});}
+// full screen (CSS-based, so it also works inside webviews)
+function setFull(on){$('mapCard').classList.toggle('full',on);$('fsTxt').textContent=on?'✕ Isira':'⛶ Full screen';document.body.style.overflow=on?'hidden':'';
+  if(adminMap)setTimeout(()=>adminMap.invalidateSize(),60);}
+$('fsBtn').onclick=()=>setFull(!$('mapCard').classList.contains('full'));
+
+// pin picker (edit order + owner location)
+let pickMap=null,pickMarker=null,pickCb=null,pickPos=null,pickCleared=false;
+const mapNote=(t,err)=>{const m=$('mapMsg');m.textContent=t;m.style.color=err?'var(--err)':'';};
+function drawPick(){if(pickMarker){pickMap.removeLayer(pickMarker);pickMarker=null;}if(!pickPos)return;
+  pickMarker=L.marker([pickPos.lat,pickPos.lng],{icon:pinIcon('#c0452f'),draggable:true}).addTo(pickMap);
+  pickMarker.on('dragend',()=>{const p=pickMarker.getLatLng();pickPos={lat:round6(p.lat),lng:round6(p.lng)};mapNote('Gi-usab ang pin. I-press ang Save pin.');});}
+function placePick(ll,z){pickPos={lat:round6(ll.lat),lng:round6(ll.lng)};pickCleared=false;drawPick();if(z)pickMap.setView([pickPos.lat,pickPos.lng],z);mapNote('Naka-pin na. I-drag ang pin kung dili sakto, dayon i-press ang Save pin.');}
+function openMap(initial,cb,title){
+  if(!hasLeaflet()){alert('Wala ma-load ang mapa. Check ang internet ug i-refresh.');return;}
+  $('mapTitle').textContent=title||'I-pin ang location';pickCb=cb;pickPos=hasPin(initial)?{lat:initial.lat,lng:initial.lng}:null;pickCleared=false;$('mapModal').classList.add('on');
+  if(!pickMap){pickMap=L.map('pickMap');addBases(pickMap);pickMap.on('click',e=>placePick(e.latlng));}
+  pickMap.invalidateSize();pickMap.setView(pickPos?[pickPos.lat,pickPos.lng]:MAP_HOME,pickPos?17:14);drawPick();
+  mapNote(pickPos?'I-tap ang mapa o i-drag ang pin aron usbon.':'I-tap ang mapa aron ibutang ang pin, o i-press ang "Akong location".');}
+const closeMap=()=>$('mapModal').classList.remove('on');
+$('mapX').onclick=closeMap;
+$('mapClear').onclick=()=>{pickPos=null;pickCleared=true;if(pickMap)drawPick();mapNote('Natangtang ang pin. I-press ang Save pin aron i-confirm.');};
+$('mapSave').onclick=()=>{if(!pickPos&&!pickCleared){mapNote('I-tap una ang mapa aron ibutang ang pin.',true);return;}const cb=pickCb,p=pickPos;closeMap();if(cb)cb(p);};
+$('mapGps').onclick=()=>{const b=$('mapGps');if(!navigator.geolocation){mapNote('Dili suportado ang location. I-tap lang ang mapa.',true);return;}
+  b.disabled=true;mapNote('Gipangita ang location…');
+  navigator.geolocation.getCurrentPosition(p=>{b.disabled=false;placePick({lat:p.coords.latitude,lng:p.coords.longitude},18);},()=>{b.disabled=false;mapNote('Dili makuha ang location. I-allow ang permission, o i-tap lang ang mapa.',true);},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});};
+
+/* ---------- edit order ---------- */
+let editId=null,editPin=null;
+function updateEditPin(){$('ePin').innerHTML=PIN_SVG+' '+(editPin?'Usbon ang pin sa location':'I-pin ang location');$('ePinInfo').textContent=editPin?'Naay pin na.':'Wala pay pin.';}
+function openEdit(id){const o=data.orders.find(x=>x.id===id);if(!o)return;editId=id;editPin=hasPin(o)?{lat:o.lat,lng:o.lng}:null;
+  $('eKilo').value=o.kilo;$('eName').value=o.name||'';$('eNote').value=o.note||'';
+  const names=partNames().slice();if(o.part&&!names.includes(o.part))names.unshift(o.part);
+  $('ePart').innerHTML=names.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');$('ePart').value=o.part||names[0];
+  $('eMsg').textContent='';$('eMsg').className='msg';updateEditPin();$('editModal').classList.add('on');}
+const closeEdit=()=>{$('editModal').classList.remove('on');editId=null;};
+$('ePin').onclick=()=>openMap(editPin,p=>{editPin=p;updateEditPin();},'I-pin ang location sa customer');
+$('eCancel').onclick=closeEdit;
+$('eSave').onclick=async()=>{const msg=$('eMsg'),btn=$('eSave'),k=parseFloat($('eKilo').value.replace(',','.')),name=$('eName').value.trim(),part=$('ePart').value,note=$('eNote').value.trim().slice(0,80);
+  msg.className='msg err';if(!(k>0)){msg.textContent='Ibutang kung pila ka kilo.';return;}if(!name){msg.textContent='Ibutang ang ngalan.';return;}
+  const id=editId,pin=editPin;btn.disabled=true;msg.className='msg';msg.textContent='Gi-save…';
+  try{await mutate(()=>{const o=data.orders.find(x=>x.id===id);if(!o)throw new Error('Wala na ang order.');Object.assign(o,{name,part,note,kilo:k,edited:Date.now()});if(pin){o.lat=pin.lat;o.lng=pin.lng;}else{delete o.lat;delete o.lng;}});closeEdit();renderAll();}
+  catch(e){msg.className='msg err';msg.textContent='Wala na-save. '+e.message;}btn.disabled=false;};
+
+/* ---------- settings sheet ---------- */
+let ownPin=null;
+function updateOwnPin(){$('owPin').innerHTML=PIN_SVG+' '+(ownPin?'Usbon ang pin sa location':'I-pin ang location');$('owPinInfo').textContent=ownPin?'Naay pin: '+ownPin.lat.toFixed(5)+', '+ownPin.lng.toFixed(5):'Wala pay pin.';}
+$('owPin').onclick=()=>openMap(ownPin,p=>{ownPin=p;updateOwnPin();},'I-pin ang location sa tag-iya');
+function fillSettings(){
+  $('priceIn').value=price();$('partsIn').value=data.settings.parts.join('\n');
+  $('showList').checked=!!data.settings.showList;$('chatOn').checked=data.settings.chatOn!==false;
+  const b=bannerCfg();$('bnOn').checked=!!b.on;$('bnText').value=b.text||'';$('bnLabelIn').value=b.label||'';$('bnSpeed').value=BN_SPEED[b.speed]?b.speed:'normal';
+  $('bnBg').value=okHex(b.bg,DEFAULT_BANNER.bg);$('bnFg').value=okHex(b.fg,DEFAULT_BANNER.fg);
+  const ow=ownerCfg();$('owName').value=ow.name;$('owInfo').value=ow.info;$('owPhone').value=ow.phone;$('owLoc').value=ow.locLabel;ownPin=hasPin(ow)?{lat:ow.lat,lng:ow.lng}:null;updateOwnPin();}
+const sheetOpen=()=>!$('sheet').classList.contains('hide');
+function toggleSheet(on){if(on)fillSettings();$('sheet').classList.toggle('hide',!on);$('scrim').classList.toggle('hide',!on);document.body.style.overflow=on?'hidden':'';$('setMsg').textContent='';renderBanner();}
+$('fab').onclick=()=>toggleSheet(true);$('sheetX').onclick=()=>toggleSheet(false);$('scrim').onclick=()=>toggleSheet(false);
+document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('details.acc').forEach(o=>{if(o!==d)o.open=false;});}));
+$('saveSet').onclick=async()=>{
+  const msg=$('setMsg'),btn=$('saveSet'),newPrice=parseFloat($('priceIn').value),open=id=>{const d=$(id).closest('details');if(d)d.open=true;};
+  let parts=$('partsIn').value.split('\n').map(x=>x.trim()).filter(Boolean);parts=parts.filter((x,i)=>parts.indexOf(x)===i).slice(0,30);if(!parts.length)parts=DEFAULT_PARTS.slice();
+  msg.className='msg err';
+  if(!(newPrice>0)){open('priceIn');msg.textContent='Ibutang ang saktong presyo.';return;}
+  const banner=readBanner();if(banner.on&&!banner.text.trim()){open('bnText');msg.textContent='Isulat una ang balita para sa banner.';return;}
+  const owner={name:$('owName').value.trim().slice(0,60),info:$('owInfo').value.trim().slice(0,500),phone:$('owPhone').value.trim().slice(0,20),locLabel:$('owLoc').value.trim().slice(0,80),lat:ownPin?ownPin.lat:null,lng:ownPin?ownPin.lng:null};
+  if(owner.phone&&owner.phone.replace(/\D/g,'').length<7){open('owPhone');msg.textContent='Saktoha ang mobile number.';return;}
+  const showList=$('showList').checked,chatOn=$('chatOn').checked;
+  btn.disabled=true;msg.className='msg';msg.textContent='Gi-save…';
+  try{await mutate(()=>{Object.assign(data.settings,{price:newPrice,parts,showList,chatOn,banner,owner});});msg.className='msg ok';msg.textContent='Na-save na.';renderAll();}
+  catch(e){msg.className='msg err';msg.textContent='Wala na-save. '+e.message;}btn.disabled=false;};
+$('clearChat').onclick=async()=>{if(!confirm('I-clear ang tanang mensahe sa chat?'))return;
+  try{await mutate(()=>{data.chat=[];});$('setMsg').className='msg ok';$('setMsg').textContent='Na-clear na ang chat.';}catch(e){alert('Wala na-clear. '+e.message);}};
+
+/* ---------- footer banner (live preview while the Setting sheet is open) ---------- */
+let bnSig='';
+const readBanner=()=>({on:$('bnOn').checked,text:$('bnText').value.slice(0,400),label:$('bnLabelIn').value.trim().slice(0,14),speed:$('bnSpeed').value,bg:$('bnBg').value,fg:$('bnFg').value});
+function renderBanner(){
+  const cfg=sheetOpen()?readBanner():bannerCfg(),el=$('banner'),root=document.documentElement;
+  const lines=String(cfg.text||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,10);
+  if(!cfg.on||!lines.length){el.classList.add('hide');root.style.setProperty('--bh','0px');$('bnTrack').textContent='';bnSig='';return;}
+  const bg=okHex(cfg.bg,DEFAULT_BANNER.bg),fg=okHex(cfg.fg,DEFAULT_BANNER.fg),pps=BN_SPEED[cfg.speed]||55,label=(cfg.label||'').trim();
+  const sig=JSON.stringify([lines,label,pps,bg,fg,innerWidth]);el.classList.remove('hide');root.style.setProperty('--bh','30px');if(sig===bnSig)return;bnSig=sig;
+  el.style.setProperty('--bn-bg',bg);el.style.setProperty('--bn-fg',fg);$('bnLabel').textContent=label;$('bnLabel').classList.toggle('hide',!label);
+  const track=$('bnTrack');track.style.animation='none';track.textContent='';
+  const mk=n=>{const g=document.createElement('div');g.className='bn-grp';for(let r=0;r<n;r++)lines.forEach(t=>{const s=document.createElement('span');s.textContent=t;g.appendChild(s);});return g;};
+  let g=mk(1);track.appendChild(g);const vw=$('bnView').clientWidth||innerWidth,w1=g.getBoundingClientRect().width||1,reps=Math.max(1,Math.ceil(vw/w1));
+  if(reps>1){track.textContent='';g=mk(reps);track.appendChild(g);}
+  const gw=g.getBoundingClientRect().width||vw,tw=g.cloneNode(true);tw.setAttribute('aria-hidden','true');track.appendChild(tw);
+  track.style.setProperty('--dur',Math.max(6,gw/pps)+'s');void track.offsetWidth;track.style.animation='';}
+$('bnBox').addEventListener('input',renderBanner);$('bnBox').addEventListener('change',renderBanner);
+$('bnPresets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$('bnBg').value=b.dataset.bg;$('bnFg').value=b.dataset.fg;renderBanner();});
+let rz=null;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(renderBanner,200);});
+
+/* ---------- boot ---------- */
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
+  if($('mapModal').classList.contains('on'))closeMap();else if($('editModal').classList.contains('on'))closeEdit();
+  else if(sheetOpen())toggleSheet(false);else if($('mapCard').classList.contains('full'))setFull(false);});
+let timer=null;
+function poll(){clearTimeout(timer);timer=setTimeout(async()=>{if(!document.hidden&&!writing&&!sheetOpen()){try{await load();renderAll();setStatus(true,'Naka-konek · '+new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}));}catch(e){setStatus(false,'Offline');}}poll();},60000);}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!writing&&!sheetOpen())refresh();});
+$('refresh').onclick=refresh;
+refresh();poll();
+</script>
+</body>
+</html>
