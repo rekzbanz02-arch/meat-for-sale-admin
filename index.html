@@ -25,6 +25,7 @@ button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--li
 .top small{display:flex;align-items:center;gap:6px;font-size:12.5px;opacity:.9}
 .dot{width:8px;height:8px;border-radius:50%;background:#7CFC9A}.dot.bad{background:#ffb4ab}
 .top .sp{flex:1}
+.top-in .iconb+.iconb{margin-left:-4px}
 .iconb{background:rgba(255,255,255,.16);width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:12px}
 .iconb:hover{background:rgba(255,255,255,.28)}
 .iconb.spin svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
@@ -74,8 +75,26 @@ label{display:block;font-weight:700;font-size:13px;margin:12px 0 4px}
 .banner:hover .bn-track,.banner:active .bn-track{animation-play-state:paused}
 @keyframes bn{to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.bn-track,.iconb.spin svg{animation:none}}
-/* settings fab + sheet */
-.fab{position:fixed;right:18px;bottom:calc(18px + var(--bh) + env(safe-area-inset-bottom,0px));z-index:8;width:56px;height:56px;padding:0;border-radius:50%;display:grid;place-items:center;box-shadow:0 6px 18px rgba(43,74,34,.45)}
+/* chat fab + panel (copied from karne_users) */
+.chatfab{position:fixed;right:16px;bottom:calc(18px + var(--bh) + env(safe-area-inset-bottom,0px));z-index:8;width:56px;height:56px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--g);color:#fff;border:2px solid var(--ink);box-shadow:0 3px 0 var(--gd)}
+.badge{position:absolute;top:-7px;right:-7px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;background:var(--err);color:#fff;font-size:12px;font-weight:700;line-height:17px;text-align:center;border:2px solid var(--card)}
+.chat{position:fixed;right:12px;bottom:calc(86px + var(--bh) + env(safe-area-inset-bottom,0px));z-index:9;width:min(360px,calc(100vw - 24px));height:min(70vh,500px);height:min(70dvh,500px);display:flex;flex-direction:column;background:var(--card);border:2px solid var(--ink);border-radius:8px;overflow:hidden}
+.chat header{display:flex;justify-content:space-between;align-items:center;background:var(--g);color:#fff;padding:6px 6px 6px 12px;font-weight:700}
+.chatx{background:transparent;border:0;color:#fff;padding:2px 10px;font-size:18px}
+.chatx:hover{background:rgba(255,255,255,.2)}
+.msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:7px;background:#eef8e8}
+.bub{max-width:82%;align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 9px}
+.bub.me{align-self:flex-end;background:#cfe8bf}
+.bub .who{display:block;font-size:12px;font-weight:600;color:var(--gd)}
+.bub .txt{display:block;overflow-wrap:anywhere;white-space:pre-wrap}
+.bub .ts{display:block;font-size:11px;color:var(--mute);text-align:right}
+.atag{background:var(--ink);color:#fff;font-size:10px;padding:1px 5px;border-radius:3px;margin-left:4px}
+.mdel{background:transparent;color:var(--err);border:0;padding:0 4px;font-size:12px}
+.mdel:hover{background:transparent;text-decoration:underline}
+.csend{display:flex;gap:8px;padding:6px 10px 10px}
+.csend input{flex:1}
+.cinfo{margin:4px 10px 0;font-size:13px;font-weight:600;color:var(--err)}
+/* settings sheet */
 .scrim{position:fixed;inset:0;background:rgba(31,44,24,.5);z-index:20}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:760px;margin:0 auto;max-height:90vh;max-height:90dvh;background:var(--bg);border-radius:22px 22px 0 0;display:flex;flex-direction:column;animation:up .22s ease}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
@@ -139,6 +158,7 @@ details.acc[open]>summary{background:var(--gl)}
   <div><h1>Karne Admin</h1><small><i class="dot" id="dot"></i><span id="status">Gi-konek…</span></small></div>
   <span class="sp"></span>
   <button class="iconb" id="refresh" aria-label="I-refresh"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></button>
+  <button class="iconb" id="setBtn" aria-label="Setting"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
 </div></header>
 
 <main>
@@ -174,7 +194,19 @@ details.acc[open]>summary{background:var(--gl)}
   <div class="bn-view" id="bnView"><div class="bn-track" id="bnTrack"></div></div>
 </div>
 
-<button class="fab" id="fab" aria-label="Setting"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+<button type="button" class="chatfab" id="chatFab" aria-label="Group chat">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 4v-4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><circle cx="8.5" cy="10.5" r=".9" fill="currentColor"/><circle cx="12" cy="10.5" r=".9" fill="currentColor"/><circle cx="15.5" cy="10.5" r=".9" fill="currentColor"/></svg>
+  <span class="badge hide" id="chatBadge">0</span>
+</button>
+<section class="chat hide" id="chatPanel" aria-label="Group chat">
+  <header><span>Group Chat</span><button type="button" class="chatx" id="chatX" aria-label="Isira ang chat">✕</button></header>
+  <div class="msgs" id="chatMsgs" aria-live="polite"></div>
+  <p class="cinfo" id="chatInfo" role="status"></p>
+  <div class="csend">
+    <input id="chatText" type="text" maxlength="300" placeholder="Isulat ang mensahe…" autocomplete="off">
+    <button type="button" id="chatSend">Send</button>
+  </div>
+</section>
 
 <div class="scrim hide" id="scrim"></div>
 <aside class="sheet hide" id="sheet" role="dialog" aria-label="Setting">
@@ -288,7 +320,7 @@ async function refresh(){const b=$('refresh');b.classList.add('spin');
   b.classList.remove('spin');renderAll();}
 
 /* ---------- orders ---------- */
-function renderAll(){renderStats();renderOrders();renderMap();renderBanner();}
+function renderAll(){renderStats();renderOrders();renderMap();renderBanner();renderChat();}
 function renderStats(){const o=data.orders;
   $('sOrd').textContent=o.length;$('sKg').textContent=kg(o.reduce((a,x)=>a+Number(x.kilo||0),0));
   $('sAmt').textContent=peso(o.reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0));$('sDone').textContent=o.filter(x=>x.delivered).length+'/'+o.length;}
@@ -417,7 +449,7 @@ function fillSettings(){
   const ow=ownerCfg();$('owName').value=ow.name;$('owInfo').value=ow.info;$('owPhone').value=ow.phone;$('owLoc').value=ow.locLabel;ownPin=hasPin(ow)?{lat:ow.lat,lng:ow.lng}:null;updateOwnPin();}
 const sheetOpen=()=>!$('sheet').classList.contains('hide');
 function toggleSheet(on){if(on)fillSettings();$('sheet').classList.toggle('hide',!on);$('scrim').classList.toggle('hide',!on);document.body.style.overflow=on?'hidden':'';$('setMsg').textContent='';renderBanner();}
-$('fab').onclick=()=>toggleSheet(true);$('sheetX').onclick=()=>toggleSheet(false);$('scrim').onclick=()=>toggleSheet(false);
+$('setBtn').onclick=()=>toggleSheet(true);$('sheetX').onclick=()=>toggleSheet(false);$('scrim').onclick=()=>toggleSheet(false);
 document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('details.acc').forEach(o=>{if(o!==d)o.open=false;});}));
 $('saveSet').onclick=async()=>{
   const msg=$('setMsg'),btn=$('saveSet'),newPrice=parseFloat($('priceIn').value),open=id=>{const d=$(id).closest('details');if(d)d.open=true;};
@@ -433,6 +465,49 @@ $('saveSet').onclick=async()=>{
   catch(e){msg.className='msg err';msg.textContent='Wala na-save. '+e.message;}btn.disabled=false;};
 $('clearChat').onclick=async()=>{if(!confirm('I-clear ang tanang mensahe sa chat?'))return;
   try{await mutate(()=>{data.chat=[];});$('setMsg').className='msg ok';$('setMsg').textContent='Na-clear na ang chat.';}catch(e){alert('Wala na-clear. '+e.message);}};
+
+/* ---------- group chat (stored in the same jsonbin as the orders) ---------- */
+let myCid=lsGet('ihawon_cid');
+if(!myCid){myCid=Date.now().toString(36)+Math.random().toString(36).slice(2,8);lsSet('ihawon_cid',myCid);}
+let chatSeen=lsGet('ihawon_chat_seen'),chatOpen=false;
+function fmtTime(ts){const d=new Date(ts),t=d.toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'});
+  return d.toDateString()===new Date().toDateString()?t:d.toLocaleDateString('en-PH',{month:'short',day:'numeric'})+' '+t;}
+function chatBottom(){const b=$('chatMsgs');b.scrollTop=b.scrollHeight;}
+function renderChat(){
+  const msgs=data.chat,box=$('chatMsgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+  box.innerHTML=msgs.length?msgs.map(m=>{const mine=m.cid===myCid;
+    return '<div class="bub'+(mine?' me':'')+'">'+
+      (mine?'':'<span class="who">'+esc(m.name)+(m.admin?'<span class="atag">Admin</span>':'')+'</span>')+
+      '<span class="txt">'+esc(m.text)+'</span>'+
+      '<span class="ts">'+fmtTime(m.ts)+' <button type="button" class="mdel" data-mid="'+esc(m.id)+'" aria-label="i-delete ang mensahe">✕</button></span></div>';
+  }).join(''):'<p class="empty">Wala pay mensahe.</p>';
+  if(chatOpen&&near)chatBottom();
+  // unread badge: first visit starts from "caught up", so old messages don't count
+  const last=msgs.length?msgs[msgs.length-1].id:null;
+  if(chatSeen===null&&last){chatSeen=last;lsSet('ihawon_chat_seen',last);}
+  if(chatOpen&&last){chatSeen=last;lsSet('ihawon_chat_seen',last);}
+  const idx=msgs.findIndex(m=>m.id===chatSeen);
+  const unread=chatOpen?0:(idx>=0?msgs.slice(idx+1):msgs).filter(m=>m.cid!==myCid).length;
+  $('chatBadge').textContent=unread>9?'9+':unread;$('chatBadge').classList.toggle('hide',!unread);}
+function toggleChat(on){
+  chatOpen=on===undefined?!chatOpen:on;$('chatPanel').classList.toggle('hide',!chatOpen);
+  renderChat();if(chatOpen){chatBottom();pollNow();}
+  poll();}
+async function sendChat(){
+  const text=$('chatText').value.trim(),info=$('chatInfo'),btn=$('chatSend');if(!text)return;
+  const msg={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),cid:myCid,name:'Admin',text:text.slice(0,300),ts:Date.now(),admin:true};
+  btn.disabled=true;info.textContent='';
+  try{await mutate(()=>{data.chat.push(msg);data.chat=data.chat.slice(-100);});$('chatText').value='';renderChat();chatBottom();}
+  catch(e){info.textContent='Wala na-send. '+e.message;}
+  btn.disabled=false;}
+$('chatFab').onclick=()=>toggleChat();
+$('chatX').onclick=()=>toggleChat(false);
+$('chatSend').onclick=sendChat;
+$('chatText').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();sendChat();}};
+$('chatMsgs').addEventListener('click',async e=>{
+  const id=e.target.dataset&&e.target.dataset.mid;if(!id)return;
+  try{await mutate(()=>{data.chat=data.chat.filter(m=>m.id!==id);});renderChat();}
+  catch(err){alert('Wala na-delete. '+err.message);}});
 
 /* ---------- footer banner (live preview while the Setting sheet is open) ---------- */
 let bnSig='';
@@ -457,9 +532,12 @@ let rz=null;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render
 /* ---------- boot ---------- */
 document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
   if($('mapModal').classList.contains('on'))closeMap();else if($('editModal').classList.contains('on'))closeEdit();
-  else if(sheetOpen())toggleSheet(false);else if($('mapCard').classList.contains('full'))setFull(false);});
+  else if(sheetOpen())toggleSheet(false);else if(chatOpen)toggleChat(false);else if($('mapCard').classList.contains('full'))setFull(false);});
 let timer=null;
-function poll(){clearTimeout(timer);timer=setTimeout(async()=>{if(!document.hidden&&!writing&&!sheetOpen()){try{await load();renderAll();setStatus(true,'Naka-konek · '+new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}));}catch(e){setStatus(false,'Offline');}}poll();},60000);}
+async function pollNow(){if(document.hidden||writing||sheetOpen())return;
+  try{await load();renderAll();setStatus(true,'Naka-konek · '+new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit'}));}catch(e){setStatus(false,'Offline');}}
+// every 8s while the chat is open, every 60s while closed
+function poll(){clearTimeout(timer);timer=setTimeout(async()=>{await pollNow();poll();},chatOpen?8000:60000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!writing&&!sheetOpen())refresh();});
 $('refresh').onclick=refresh;
 refresh();poll();
