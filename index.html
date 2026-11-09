@@ -130,6 +130,7 @@ details.acc>summary::after{content:"▾";transition:transform .2s}details.acc[op
 .stats .stat{border:0}
 .stat:nth-child(1){background:#eaf6e1}.stat:nth-child(2){background:#cfe8bf}.stat:nth-child(3){background:#a9d58f}
 .stat:nth-child(4){background:#3f8a3a;color:#fff}.stat:nth-child(4) span{color:#e1f3d8}
+.stat.w2{grid-column:span 2}.stat:nth-child(5){background:#2b6a2b;color:#fff}.stat:nth-child(5) span{color:#e1f3d8}.stat:nth-child(6){background:#f6e7c8}.stat:nth-child(6) b{color:#7a4f12}.stat:nth-child(6) span{color:#7a4f12}
 .card{border-top:5px solid var(--g);box-shadow:0 2px 10px rgba(43,106,43,.1)}
 .card-h h2{color:var(--gd)}
 .mapcard{background:#eef8e8;border-top-color:#7cc263}
@@ -146,6 +147,7 @@ details.acc>summary::after{content:"▾";transition:transform .2s}details.acc[op
 .sb{padding:4px}
 .kmenu{top:calc(100% - 4px);right:6px;z-index:6}
 .sum{margin-top:10px;padding:8px 12px;border-top:0;border-radius:10px;background:var(--g);color:#fff}
+.sum.pd{margin-top:6px;background:var(--gd)}.sum.up{margin-top:6px;background:#f6e7c8;color:#7a4f12}
 .sub{margin:12px 0 4px;color:var(--gd)}
 .prow{padding:4px 8px;border-bottom:0;border-radius:8px;font-size:14px}.prow:nth-of-type(odd){background:#eef8e8}
 details.acc[open]>summary{background:var(--gl)}
@@ -167,6 +169,8 @@ details.acc[open]>summary{background:var(--gl)}
     <div class="stat"><b id="sKg">0</b><span>Kilo</span></div>
     <div class="stat"><b id="sAmt">P0</b><span>Kantidad</span></div>
     <div class="stat"><b id="sDone">0</b><span>Na-deliver</span></div>
+    <div class="stat w2"><b id="sPaid">P0</b><span>Bayad na</span></div>
+    <div class="stat w2"><b id="sUnpaid">P0</b><span>Wala pa bayad</span></div>
   </div>
 
   <section class="card">
@@ -323,7 +327,9 @@ async function refresh(){const b=$('refresh');b.classList.add('spin');
 function renderAll(){renderStats();renderOrders();renderMap();renderBanner();renderChat();}
 function renderStats(){const o=data.orders;
   $('sOrd').textContent=o.length;$('sKg').textContent=kg(o.reduce((a,x)=>a+Number(x.kilo||0),0));
-  $('sAmt').textContent=peso(o.reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0));$('sDone').textContent=o.filter(x=>x.delivered).length+'/'+o.length;}
+  $('sAmt').textContent=peso(o.reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0));$('sDone').textContent=o.filter(x=>x.delivered).length+'/'+o.length;
+  const pa=o.filter(x=>x.paid).reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0),ta=o.reduce((a,x)=>a+Number(x.kilo||0)*partPrice(x.part),0);
+  $('sPaid').textContent=peso(pa);$('sUnpaid').textContent=peso(ta-pa);}
 function renderOrders(){
   const rows=data.orders;let html='';
   if(!rows.length){$('rows').innerHTML='<p class="empty">Wala pay nag-order.</p>';return;}
@@ -334,7 +340,8 @@ function renderOrders(){
     (o.id===menuId?'<div class="kmenu"><label class="kchk"><input type="checkbox" data-id="'+id+'" data-f="delivered"'+(o.delivered?' checked':'')+'>Delivered</label><label class="kchk"><input type="checkbox" data-id="'+id+'" data-f="paid"'+(o.paid?' checked':'')+'>Paid</label><button data-edit="'+id+'">Edit</button><button data-del="'+id+'">Delete</button></div>':'')+'</div>';}).join('');
   const tot=rows.reduce((a,o)=>a+Number(o.kilo||0),0),amt=rows.reduce((a,o)=>a+Number(o.kilo||0)*partPrice(o.part),0),m={},am={};
   rows.forEach(o=>{const k=o.part||'Walay parte';m[k]=(m[k]||0)+Number(o.kilo||0);am[k]=(am[k]||0)+Number(o.kilo||0)*partPrice(o.part);});
-  html+='<div class="sum"><span>Total: '+kg(tot)+' kg</span><span>'+peso(amt)+'</span></div><h3 class="sub">Kilo kada parte</h3>'+
+  const paidRows=rows.filter(o=>o.paid),paidAmt=paidRows.reduce((a,o)=>a+Number(o.kilo||0)*partPrice(o.part),0);
+  html+='<div class="sum"><span>Total: '+kg(tot)+' kg</span><span>'+peso(amt)+'</span></div><div class="sum pd"><span>Bayad na ('+paidRows.length+' ka order)</span><span>'+peso(paidAmt)+'</span></div><div class="sum up"><span>Wala pa bayad ('+(rows.length-paidRows.length)+' ka order)</span><span>'+peso(amt-paidAmt)+'</span></div><h3 class="sub">Kilo kada parte</h3>'+
     Object.keys(m).map(k=>'<div class="prow"><span>'+esc(k)+'</span><b>'+kg(m[k])+' kg</b><b>'+peso(am[k])+'</b></div>').join('');
   $('rows').innerHTML=html;}
 $('rows').addEventListener('click',async e=>{
@@ -357,12 +364,12 @@ $('printBtn').onclick=()=>{
   if(!rows.length){alert('Walay order nga i-print sa gipili nga lista.');return;}
   const label={all:'Tanan nga order',pending:'Wala pa na-deliver',done:'Na-deliver na',unpaid:'Wala pa bayad',paid:'Bayad na'}[f];
   const title=(data.settings.signText||DEFAULT_SIGN).replace(/\{price\}/g,price()),today=new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
-  let tk=0,ta=0;const parts={};
-  const body=rows.map((o,i)=>{const k=Number(o.kilo||0),pp=partPrice(o.part),a=k*pp;tk+=k;ta+=a;const g=parts[o.part||'Walay parte']||(parts[o.part||'Walay parte']={k:0,a:0});g.k+=k;g.a+=a;
+  let tk=0,ta=0,tp=0,np=0;const parts={};
+  const body=rows.map((o,i)=>{const k=Number(o.kilo||0),pp=partPrice(o.part),a=k*pp;tk+=k;ta+=a;if(o.paid){tp+=a;np++;}const g=parts[o.part||'Walay parte']||(parts[o.part||'Walay parte']={k:0,a:0});g.k+=k;g.a+=a;
     return '<tr><td>'+(i+1)+'</td><td>'+esc(o.name)+'</td><td>'+esc(o.part||'')+'</td><td class="num">'+kg(k)+'</td><td class="num">'+peso(pp)+'</td><td class="num">'+peso(a)+'</td><td>'+esc(o.note||'')+'</td><td>'+(o.delivered?'Na-deliver':'&#9744;')+'</td><td>'+(o.paid?'Bayad na':'&#9744;')+'</td></tr>';}).join('');
   const sum=Object.keys(parts).map(k=>'<tr><td>'+esc(k)+'</td><td class="num">'+kg(parts[k].k)+' kg</td><td class="num">'+peso(parts[k].a)+'</td></tr>').join('');
   $('printArea').hidden=false;
-  $('printArea').innerHTML='<h1>'+esc(title)+'</h1><p>'+esc(label)+' &middot; '+esc(today)+' &middot; '+rows.length+' ka order</p><table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th><th>Bayad</th></tr></thead><tbody>'+body+'</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">'+kg(tk)+'</td><td></td><td class="num">'+peso(ta)+'</td><td colspan="3"></td></tr></tfoot></table><h2>Kilo kada parte</h2><table><thead><tr><th>Parte</th><th class="num">Kilo</th><th class="num">Kantidad</th></tr></thead><tbody>'+sum+'</tbody></table>';
+  $('printArea').innerHTML='<h1>'+esc(title)+'</h1><p>'+esc(label)+' &middot; '+esc(today)+' &middot; '+rows.length+' ka order</p><table><thead><tr><th>#</th><th>Ngalan</th><th>Parte</th><th class="num">Kilo</th><th class="num">Presyo/kg</th><th class="num">Kantidad</th><th>Address/Notes</th><th>Deliver</th><th>Bayad</th></tr></thead><tbody>'+body+'</tbody><tfoot><tr><td colspan="3">Total</td><td class="num">'+kg(tk)+'</td><td></td><td class="num">'+peso(ta)+'</td><td colspan="3"></td></tr><tr><td colspan="5">Bayad na ('+np+' ka order)</td><td class="num">'+peso(tp)+'</td><td colspan="3"></td></tr><tr><td colspan="5">Wala pa bayad ('+(rows.length-np)+' ka order)</td><td class="num">'+peso(ta-tp)+'</td><td colspan="3"></td></tr></tfoot></table><h2>Kilo kada parte</h2><table><thead><tr><th>Parte</th><th class="num">Kilo</th><th class="num">Kantidad</th></tr></thead><tbody>'+sum+'</tbody></table>';
   setTimeout(()=>window.print(),60);};
 window.addEventListener('afterprint',()=>{$('printArea').innerHTML='';$('printArea').hidden=true;});
 
